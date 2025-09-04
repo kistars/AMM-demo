@@ -2,7 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {AMMToken} from "./AMMToken.sol";
-
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IAMMFactory} from "./interfaces/IAMMFactory.sol";
 contract AMMPair is AMMToken {
     using UQ112x112 for uint224;
 
@@ -61,7 +62,7 @@ contract AMMPair is AMMToken {
 
     // 计算添加流动性时应发行的LP代币数量
     function _mintFee(uint112 _reserve0, uint112 _reserve1) private returns (bool feeOn) {
-        address feeTo = IUniswapV2Factory(factory).feeTo();
+        address feeTo = IAMMFactory(factory).feeTo();
         feeOn = feeTo != address(0);
         uint256 _kLast = kLast; // gas优化
 
@@ -151,7 +152,6 @@ contract AMMPair is AMMToken {
 
             if (amount0Out > 0) IERC20(_token0).transfer(to, amount0Out);
             if (amount1Out > 0) IERC20(_token1).transfer(to, amount1Out);
-            if (data.length > 0) IUniswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
 
             balance0 = IERC20(_token0).balanceOf(address(this));
             balance1 = IERC20(_token1).balanceOf(address(this));
@@ -201,20 +201,6 @@ contract AMMPair is AMMToken {
             z = 1;
         }
     }
-}
-
-// 接口定义
-interface IUniswapV2Factory {
-    function feeTo() external view returns (address);
-}
-
-interface IERC20 {
-    function balanceOf(address account) external view returns (uint256);
-    function transfer(address to, uint256 value) external returns (bool);
-}
-
-interface IUniswapV2Callee {
-    function uniswapV2Call(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external;
 }
 
 // 用于价格计算的库
