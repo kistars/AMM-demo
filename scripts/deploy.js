@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 
 async function main() {
     console.log("开始部署 AMM Beacon 升级系统...");
@@ -26,41 +26,33 @@ async function main() {
     // 2. 部署 Beacon 合约
     console.log("\n=== 部署 Beacon 合约 ===");
 
-    const AMMBeacon = await ethers.getContractFactory("AMMBeacon");
-
-    // 部署工厂 Beacon
-    const factoryBeacon = await AMMBeacon.deploy(await factoryImpl.getAddress());
+    // 部署 Beacon 合约
+    const UpgradeableBeacon = await ethers.getContractFactory("UpgradeableBeacon");
+    const factoryBeacon = await UpgradeableBeacon.deploy(await factoryImpl.getAddress(), deployer.address);
     await factoryBeacon.waitForDeployment();
     console.log("Factory Beacon 地址:", await factoryBeacon.getAddress());
 
-    // 部署配对 Beacon
-    const pairBeacon = await AMMBeacon.deploy(await pairImpl.getAddress());
+    const pairBeacon = await UpgradeableBeacon.deploy(await pairImpl.getAddress(), deployer.address);
     await pairBeacon.waitForDeployment();
     console.log("Pair Beacon 地址:", await pairBeacon.getAddress());
 
     // 3. 部署工厂代理合约
     console.log("\n=== 部署工厂代理合约 ===");
 
-    // 准备初始化数据
-    const initData = AMMFactoryUpgradeable.interface.encodeFunctionData("initialize", [
-        await pairBeacon.getAddress(),
-        deployer.address, // 手续费接收地址
-        30 // 30 基点 = 0.3% 手续费
-    ]);
-
-    // 使用 Beacon 代理模式部署工厂合约
-    const factoryProxy = new ethers.Contract(
+    // 使用 upgrades.deployBeaconProxy 部署工厂合约
+    const factoryProxy = await upgrades.deployBeaconProxy(
         await factoryBeacon.getAddress(),
-        AMMFactoryUpgradeable.interface,
-        deployer
+        AMMFactoryUpgradeable,
+        [
+            await pairBeacon.getAddress(),
+            deployer.address, // 手续费接收地址
+            30 // 30 基点 = 0.3% 手续费
+        ],
+        {
+            initializer: "initialize"
+        }
     );
-
-    // 初始化工厂合约
-    await factoryProxy.initialize(
-        await pairBeacon.getAddress(),
-        deployer.address,
-        30
-    );
+    await factoryProxy.waitForDeployment();
     console.log("工厂代理合约地址:", await factoryProxy.getAddress());
 
     // 4. 部署测试代币
