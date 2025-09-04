@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {AMMToken} from "./AMMToken.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IAMMFactory} from "./interfaces/IAMMFactory.sol";
+
 contract AMMPair is AMMToken {
     using UQ112x112 for uint224;
 
@@ -138,7 +139,7 @@ contract AMMPair is AMMToken {
     }
 
     // 交换代币
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data) external {
+    function swap(uint256 amount0Out, uint256 amount1Out, address to) external {
         require(amount0Out > 0 || amount1Out > 0, "UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT");
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         require(amount0Out < _reserve0 && amount1Out < _reserve1, "UniswapV2: INSUFFICIENT_LIQUIDITY");
