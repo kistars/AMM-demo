@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IAMMPair} from "./interfaces/IAMMPair.sol";
 
@@ -13,7 +12,7 @@ import {IAMMPair} from "./interfaces/IAMMPair.sol";
  * @dev 支持升级的 AMM 配对合约
  * 实现恒定乘积自动做市商功能
  */
-contract AMMPairUpgradeable is Initializable, ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, IAMMPair {
+contract AMMPairUpgradeable is Initializable, ERC20Upgradeable, OwnableUpgradeable, IAMMPair {
     using MathUtils for uint256;
 
     // 代币对信息
@@ -57,8 +56,7 @@ contract AMMPairUpgradeable is Initializable, ERC20Upgradeable, OwnableUpgradeab
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        // 移除 _disableInitializers() 以允许直接初始化
-        // _disableInitializers();
+        _disableInitializers();
     }
 
     /**
@@ -74,7 +72,6 @@ contract AMMPairUpgradeable is Initializable, ERC20Upgradeable, OwnableUpgradeab
 
         __ERC20_init("AMM LP Token", "AMMLP");
         __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
 
         factory = msg.sender;
         token0 = _token0;
@@ -230,11 +227,6 @@ contract AMMPairUpgradeable is Initializable, ERC20Upgradeable, OwnableUpgradeab
         _reserve1 = reserve1;
         _blockTimestampLast = blockTimestampLast;
     }
-
-    /**
-     * @dev 授权升级函数
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
 
 /**

@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {IAMMPair} from "./interfaces/IAMMPair.sol";
 
@@ -12,7 +11,7 @@ import {IAMMPair} from "./interfaces/IAMMPair.sol";
  * @dev 支持升级的 AMM 工厂合约
  * 管理代币对的创建和升级
  */
-contract AMMFactoryUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract AMMFactoryUpgradeable is Initializable, OwnableUpgradeable {
     // 代币对映射：tokenA => tokenB => pairAddress
     mapping(address => mapping(address => address)) public getPair;
 
@@ -41,12 +40,6 @@ contract AMMFactoryUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgrade
     error InvalidFeeRate();
     error InvalidBeacon();
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        // 移除 _disableInitializers() 以允许直接初始化
-        // _disableInitializers();
-    }
-
     /**
      * @dev 初始化函数
      * @param pairBeacon_ 配对合约的 Beacon 地址
@@ -55,7 +48,6 @@ contract AMMFactoryUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgrade
      */
     function initialize(address pairBeacon_, address feeRecipient_, uint256 feeRate_) public initializer {
         __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
 
         if (pairBeacon_ == address(0)) revert InvalidBeacon();
 
@@ -129,9 +121,4 @@ contract AMMFactoryUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgrade
         pairBeacon = newBeacon;
         emit PairBeaconChanged(oldBeacon, newBeacon);
     }
-
-    /**
-     * @dev 授权升级函数
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
