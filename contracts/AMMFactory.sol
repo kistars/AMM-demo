@@ -12,10 +12,10 @@ contract AMMFactory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
 
     function createPair(address tokenA, address tokenB) external returns (address pair) {
-        require(tokenA != tokenB, "UniswapV2: IDENTICAL_ADDRESSES");
+        require(tokenA != tokenB, "IDENTICAL_ADDRESSES");
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), "UniswapV2: ZERO_ADDRESS");
-        require(getPair[token0][token1] == address(0), "UniswapV2: PAIR_EXISTS");
+        require(token0 != address(0), "ZERO_ADDRESS");
+        require(getPair[token0][token1] == address(0), "PAIR_EXISTS");
 
         // 创建新的配对合约
         AMMPair newPair = new AMMPair();
